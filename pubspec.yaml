@@ -1,0 +1,7 @@
+name: dslink_rpi
+description: Raspberry Pi DSLink
+dependencies:
+  dslink:
+    git: https://github.com/IOT-DSA/sdk-dslink-dart.git
+  rpi_gpio:
+    git: https://github.com/kaendfinger/dart_rpi_gpio.git
