@@ -11,7 +11,6 @@ LinkProvider link;
 Gpio gpio;
 
 const PIN_VALUE_ZERO = const {"value": 0};
-
 const PIN_VALUE_ONE = const {"value": 1};
 
 final Map<String, dynamic> DEFAULT_NODES = {
@@ -211,9 +210,7 @@ class PinWatcherNode extends SimpleNode {
         }
       });
 
-      listener = link
-          .onValueChange("${path}/Value")
-          .listen((ValueUpdate update) {
+      listener = link.onValueChange("${path}/Value").listen((ValueUpdate update) {
         var value = update.value;
 
         if (value == null) {
