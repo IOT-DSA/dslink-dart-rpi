@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+if [ -d build ]
+then
+  rm -rf build
+fi
+
+mkdir build
+
+pub get
+cp -R -L packages/ build/
+cp -R bin lib build/
+cd build
+zip -r ../../../files/dslink-dart-rpi.zip .

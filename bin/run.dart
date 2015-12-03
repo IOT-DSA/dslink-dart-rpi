@@ -96,7 +96,24 @@ main(List<String> args) async {
     exit(1);
   }
 
-  await rpi.loadLibrary();
+  try {
+    await rpi.loadLibrary();
+  } catch (e) {
+    if (e.toString().contains("dart-ext:")) {
+      var result = await Process.run("bash", [
+        "packages/src/native/build_lib"
+      ]);
+
+      if (result.exitCode != 0) {
+        var msg = "Failed to build the Raspberry Pi Native Extension (Exit Code: ${result.exitCode})";
+        msg += "\nSTDOUT:\n${result.stdout}\nSTDERR:\n${result.stderr}";
+        throw new Exception(msg);
+      }
+    } else {
+      rethrow;
+    }
+  }
+
   Gpio.hardware = new rpi.RpiHardware();
   gpio = Gpio.instance;
 

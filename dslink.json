@@ -1,0 +1,24 @@
+{
+  "name": "dslink-dart-rpi",
+  "version": "0.0.1",
+  "description": "Raspberry Pi DSLink",
+  "main": "bin/run.dart",
+  "engines": {
+    "dart": ">=1.12.0"
+  },
+  "getDependencies": [
+    "pub get"
+  ],
+  "configs": {
+    "broker": {
+      "type": "url"
+    },
+    "name": {
+      "type": "string",
+      "default": "RaspberryPi"
+    },
+    "token": {
+      "type": "string"
+    }
+  }
+}
