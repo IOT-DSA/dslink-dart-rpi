@@ -5,7 +5,7 @@ then
 fi
 
 mkdir build
-
+touch stub
 pub get
 cp -R -L packages build/packages
 cp -R bin lib build/
