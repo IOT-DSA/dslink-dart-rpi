@@ -7,7 +7,7 @@ fi
 mkdir build
 
 pub get
-cp -R -L packages/ build/
+cp -R -L packages build/packages
 cp -R bin lib build/
 cd build
 zip -r ../../../files/dslink-dart-rpi.zip .
