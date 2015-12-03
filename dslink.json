@@ -7,7 +7,8 @@
     "dart": ">=1.12.0"
   },
   "getDependencies": [
-    "pub get"
+    "pub get",
+    "bash packages/rpi_gpio/src/native/build_lib"
   ],
   "configs": {
     "broker": {
