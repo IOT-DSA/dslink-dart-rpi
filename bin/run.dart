@@ -14,7 +14,7 @@ const PIN_VALUE_ZERO = const {"value": 0};
 const PIN_VALUE_ONE = const {"value": 1};
 
 final Map<String, dynamic> DEFAULT_NODES = {
-  "Execute_Command": {
+  "executeCommand": {
     r"$is": "executeCommand",
     r"$invokable": "write",
     r"$name": "Execute Command",
@@ -25,8 +25,8 @@ final Map<String, dynamic> DEFAULT_NODES = {
       {"name": "stdout", "type": "string", "editor": "textarea"}
     ]
   },
-  "GPIO": {
-    "Create_Pin_Watcher": {
+  "gpio": {
+    "createPinWatcher": {
       r"$is": "createPinWatcher",
       r"$invokable": "write",
       r"$name": "Create Pin Watcher",
@@ -37,7 +37,7 @@ final Map<String, dynamic> DEFAULT_NODES = {
         {"name": "mode", "type": "enum[input,output]", "default": "input"}
       ]
     },
-    "Get_Pin_Value": {
+    "getPinValue": {
       r"$is": "getPinValue",
       r"$invokable": "write",
       r"$name": "Get Pin Value",
@@ -45,7 +45,7 @@ final Map<String, dynamic> DEFAULT_NODES = {
       r"$columns": [{"name": "value", "type": "number"}],
       r"$result": "values"
     },
-    "Read_RC_Circut": {
+    "readRCCircut": {
       r"$is": "readRCCircut",
       r"$invokable": "write",
       r"$name": "Read RC Circut",
@@ -53,21 +53,21 @@ final Map<String, dynamic> DEFAULT_NODES = {
       r"$columns": [{"name": "value", "type": "number"}],
       r"$result": "values"
     },
-    "Start_Soft_Tone": {
+    "startSoftTone": {
       r"$is": "startSoftTone",
       r"$invokable": "write",
       r"$name": "Start Soft Tone",
       r"$params": [{"name": "pin", "type": "number", "default": 1}],
       r"$result": "values"
     },
-    "Stop_Soft_Tone": {
+    "stopSoftTone": {
       r"$is": "stopSoftTone",
       r"$invokable": "write",
       r"$name": "Stop Soft Tone",
       r"$params": [{"name": "pin", "type": "number", "default": 1}],
       r"$result": "values"
     },
-    "Write_Soft_Tone": {
+    "writeSoftTone": {
       r"$is": "writeSoftTone",
       r"$invokable": "write",
       r"$name": "Write Soft Tone",
@@ -77,7 +77,7 @@ final Map<String, dynamic> DEFAULT_NODES = {
       ],
       r"$result": "values"
     },
-    "Set_Pin_Value": {
+    "setPinValue": {
       r"$is": "setPinValue",
       r"$invokable": "write",
       r"$name": "Set Pin Value",
@@ -103,8 +103,7 @@ main(List<String> args) async {
     "RaspberryPi-",
     defaultNodes: DEFAULT_NODES,
     profiles: {
-      "executeCommand": (String path) => new SimpleActionNode(
-        path, (Map<String, dynamic> params) async {
+      "executeCommand": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
         var cmd = params["command"];
         var args = ["-c", cmd];
         var result = await Process.run("bash", args);
@@ -114,14 +113,12 @@ main(List<String> args) async {
           "stdout": result.stdout.toString()
         };
       }),
-      "togglePinValue": (String path) => new SimpleActionNode(
-        path, (Map<String, dynamic> params) {
+      "togglePinValue": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) {
         var x = link[new Path(path).parentPath];
         var l = x.lastValueUpdate.value;
         x.updateValue(l == 0 ? 1 : 0);
       }),
-      "setPinValue": (String path) => new SimpleActionNode(
-        path, (Map<String, dynamic> params) {
+      "setPinValue": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) {
         try {
           int pn = params["pin"].toInt();
           int value = params["value"].toInt();
@@ -130,8 +127,7 @@ main(List<String> args) async {
         } catch (e) {}
         return {};
       }),
-      "getPinValue": (String path) => new SimpleActionNode(
-        path, (Map<String, dynamic> params) {
+      "getPinValue": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) {
         try {
           int pn = params["pin"].toInt();
           var pin = gpio.pin(pn, input);
@@ -147,8 +143,7 @@ main(List<String> args) async {
         } catch (e) {}
         return {};
       }),
-      "startSoftTone": (String path) => new SimpleActionNode(
-        path, (Map<String, dynamic> params) async {
+      "startSoftTone": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
         try {
           int pn = params["pin"].toInt();
           var pin = gpio.pin(pn, output);
@@ -158,8 +153,7 @@ main(List<String> args) async {
         } catch (e) {}
         return {};
       }),
-      "writeSoftTone": (String path) => new SimpleActionNode(
-        path, (Map<String, dynamic> params) async {
+      "writeSoftTone": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
         try {
           int pn = params["pin"].toInt();
           var pin = gpio.pin(pn, output);
@@ -175,8 +169,7 @@ main(List<String> args) async {
         } catch (e) {}
         return {};
       }),
-      "readRCCircut": (String path) => new SimpleActionNode(
-        path, (Map<String, dynamic> params) async {
+      "readRCCircut": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
         try {
           int pn = params["pin"].toInt();
           var pin = gpio.pin(pn, output);
@@ -192,8 +185,7 @@ main(List<String> args) async {
         } catch (e) {}
         return {};
       }),
-      "createPinWatcher": (String path) => new SimpleActionNode(
-        path, (Map<String, dynamic> params) {
+      "createPinWatcher": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) {
         var m = {
           r"$is": "pinWatcher",
           r"$name": params["name"],
@@ -208,10 +200,8 @@ main(List<String> args) async {
         link.save();
       }),
       "pinWatcher": (String path) => new PinWatcherNode(path),
-      "deletePinWatcher": (String path) => new DeleteActionNode.forParent(
-        path, link.provider),
-      "stopSoftTone": (String path) => new SimpleActionNode(
-        path, (Map<String, dynamic> params) async {
+      "deletePinWatcher": (String path) => new DeleteActionNode.forParent(path, link.provider),
+      "stopSoftTone": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
         try {
           int pn = params["pin"].toInt();
           var pin = gpio.pin(pn, output);
@@ -226,16 +216,16 @@ main(List<String> args) async {
   link.init();
 
   for (var n in DEFAULT_NODES.keys) {
-    if (n == "GPIO") {
+    if (n == "gpio") {
       continue;
     }
     link.removeNode("/${n}");
     link.addNode("/${n}", DEFAULT_NODES[n]);
   }
 
-  for (var n in DEFAULT_NODES["GPIO"].keys) {
-    link.removeNode("/GPIO/${n}");
-    link.addNode("/GPIO/${n}", DEFAULT_NODES["GPIO"][n]);
+  for (var n in DEFAULT_NODES["gpio"].keys) {
+    link.removeNode("/gpio/${n}");
+    link.addNode("/gpio/${n}", DEFAULT_NODES["gpio"][n]);
   }
 
   link.connect();
@@ -260,10 +250,10 @@ class PinWatcherNode extends SimpleNode {
     if (mode == "input") {
       pin = gpio.pin(pinn, input);
 
-      link.removeNode("${path}/Value");
-      link.addNode("${path}/Value", {r"$type": "number", "?value": pin.value});
+      link.removeNode("${path}/value");
+      link.addNode("${path}/value", {r"$type": "number", "?value": pin.value});
 
-      var pv = link["${path}/Value"];
+      var pv = link["${path}/value"];
       listener = pin.events.listen((e) {
         pv.updateValue(e.value);
       });
@@ -272,8 +262,8 @@ class PinWatcherNode extends SimpleNode {
     } else if (mode == "output") {
       pin = gpio.pin(pinn, output);
 
-      link.removeNode("${path}/Value");
-      link.addNode("${path}/Value", {
+      link.removeNode("${path}/value");
+      link.addNode("${path}/value", {
         r"$type": "number",
         "?value": 0,
         r"$writable": "write",
@@ -285,14 +275,14 @@ class PinWatcherNode extends SimpleNode {
         }
       });
 
-      link.addNode("${path}/Frequency", {
+      link.addNode("${path}/frequency", {
         r"$type": "number",
         "?value": 0,
         r"$writable": "write"
       });
 
       listener =
-        link.onValueChange("${path}/Value").listen((ValueUpdate update) {
+        link.onValueChange("${path}/value").listen((ValueUpdate update) {
           var value = update.value;
 
           if (value == null) {
@@ -307,7 +297,7 @@ class PinWatcherNode extends SimpleNode {
         });
 
       frequencyListener =
-        link.onValueChange("${path}/Frequency").listen((ValueUpdate update) {
+        link.onValueChange("${path}/frequency").listen((ValueUpdate update) {
           var value = update.value;
 
           if (value == null) {
@@ -326,8 +316,8 @@ class PinWatcherNode extends SimpleNode {
         });
     }
 
-    link.removeNode("${path}/Delete");
-    link.addNode("${path}/Delete", {
+    link.removeNode("${path}/delete");
+    link.addNode("${path}/delete", {
       r"$is": "deletePinWatcher",
       r"$invokable": "write",
       r"$result": "values",
@@ -355,8 +345,9 @@ class PinWatcherNode extends SimpleNode {
   @override
   Map save() {
     var m = super.save();
-    m.remove("Delete");
-    m.remove("Value");
+    m.remove("delete");
+    m.remove("value");
+    m.remove("frequency");
     return m;
   }
 }
