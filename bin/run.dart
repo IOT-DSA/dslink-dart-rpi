@@ -15,6 +15,7 @@ const PIN_VALUE_ONE = const {"value": 1};
 
 final Map<String, dynamic> DEFAULT_NODES = {
   "gpio": {
+    r"$name": "GPIO",
     "createPinWatcher": {
       r"$is": "createPinWatcher",
       r"$invokable": "write",
