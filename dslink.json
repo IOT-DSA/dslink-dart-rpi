@@ -8,7 +8,7 @@
   },
   "getDependencies": [
     "pub get",
-    "bash packages/rpi_gpio/src/native/build_lib"
+    "pub run rpi_gpio:build_lib"
   ],
   "configs": {
     "broker": {
