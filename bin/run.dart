@@ -177,12 +177,14 @@ main(List<String> args) async {
 
         var rp = "${params["name"].replaceAll(' ', '_')}_${params['pin']}";
 
-        link.addNode("/GPIO/${rp}", m);
+        link.addNode("/gpio/${rp}", m);
 
         link.save();
       }),
       "pinWatcher": (String path) => new PinWatcherNode(path),
-      "deletePinWatcher": (String path) => new DeleteActionNode.forParent(path, link.provider),
+      "deletePinWatcher": (String path) => new DeleteActionNode.forParent(path, link.provider as MutableNodeProvider, onDelete: () {
+        link.save();
+      }),
       "stopSoftTone": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
         try {
           int pn = params["pin"].toInt();
@@ -198,7 +200,7 @@ main(List<String> args) async {
   link.init();
 
   for (var n in DEFAULT_NODES.keys) {
-    if (n == "gpio") {
+    if (n == "gpio" || n.startsWith(r"$") || n.startsWith("@")) {
       continue;
     }
     link.removeNode("/${n}");
@@ -206,6 +208,9 @@ main(List<String> args) async {
   }
 
   for (var n in DEFAULT_NODES["gpio"].keys) {
+    if (n.toString().startsWith(r"$") || n.toString().startsWith("@")) {
+      continue;
+    }
     link.removeNode("/gpio/${n}");
     link.addNode("/gpio/${n}", DEFAULT_NODES["gpio"][n]);
   }
