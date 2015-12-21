@@ -14,17 +14,6 @@ const PIN_VALUE_ZERO = const {"value": 0};
 const PIN_VALUE_ONE = const {"value": 1};
 
 final Map<String, dynamic> DEFAULT_NODES = {
-  "executeCommand": {
-    r"$is": "executeCommand",
-    r"$invokable": "write",
-    r"$name": "Execute Command",
-    r"$params": [{"name": "command", "type": "string"}],
-    r"$result": "values",
-    r"$columns": [
-      {"name": "exitCode", "type": "number"},
-      {"name": "stdout", "type": "string", "editor": "textarea"}
-    ]
-  },
   "gpio": {
     "createPinWatcher": {
       r"$is": "createPinWatcher",
@@ -96,6 +85,8 @@ main(List<String> args) async {
     exit(1);
   }
 
+  await rpi.loadLibrary();
+
   Gpio.hardware = new rpi.RpiHardware();
   gpio = Gpio.instance;
 
@@ -103,16 +94,6 @@ main(List<String> args) async {
     "RaspberryPi-",
     defaultNodes: DEFAULT_NODES,
     profiles: {
-      "executeCommand": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
-        var cmd = params["command"];
-        var args = ["-c", cmd];
-        var result = await Process.run("bash", args);
-
-        return {
-          "exitCode": result.exitCode,
-          "stdout": result.stdout.toString()
-        };
-      }),
       "togglePinValue": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) {
         var x = link[new Path(path).parentPath];
         var l = x.lastValueUpdate.value;
@@ -251,7 +232,10 @@ class PinWatcherNode extends SimpleNode {
       pin = gpio.pin(pinn, input);
 
       link.removeNode("${path}/value");
-      link.addNode("${path}/value", {r"$type": "number", "?value": pin.value});
+      link.addNode("${path}/value", {
+        r"$type": "number",
+        "?value": pin.value
+      });
 
       var pv = link["${path}/value"];
       listener = pin.events.listen((e) {
@@ -267,7 +251,8 @@ class PinWatcherNode extends SimpleNode {
         r"$type": "number",
         "?value": 0,
         r"$writable": "write",
-        "Toggle": {
+        "toggle": {
+          r"$name": "Toggle",
           r"$is": "togglePinValue",
           r"$invokable": "write",
           r"$params": [],
