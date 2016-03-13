@@ -21,5 +21,6 @@
     "token": {
       "type": "string"
     }
-  }
+  },
+  "sudo": true
 }
