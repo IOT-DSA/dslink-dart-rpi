@@ -1,14 +1,13 @@
 import "dart:async";
-import "dart:io";
 
 import "package:dslink/dslink.dart";
 import "package:dslink/nodes.dart";
 
-import "package:rpi_gpio/rpi_gpio.dart";
-import "package:rpi_gpio/rpi_hardware.dart" deferred as rpi;
+import "package:dslink_rpi/gpio.dart";
+import "package:dslink_rpi/gpio_native.dart";
 
 LinkProvider link;
-Gpio gpio;
+GPIO gpio;
 
 const PIN_VALUE_ZERO = const {"value": 0};
 const PIN_VALUE_ONE = const {"value": 1};
@@ -81,15 +80,8 @@ final Map<String, dynamic> DEFAULT_NODES = {
 };
 
 main(List<String> args) async {
-  if (!isRaspberryPi) {
-    print("ERROR: This link only works on the Raspberry Pi.");
-    exit(1);
-  }
-
-  await rpi.loadLibrary();
-
-  Gpio.hardware = new rpi.RpiHardware();
-  gpio = Gpio.instance;
+  gpio = new NativeGPIO();
+  await gpio.init();
 
   link = new LinkProvider(args,
     "RaspberryPi-",
@@ -100,20 +92,18 @@ main(List<String> args) async {
         var l = x.lastValueUpdate.value;
         x.updateValue(l == 0 ? 1 : 0);
       }),
-      "setPinValue": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) {
+      "setPinValue": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
         try {
           int pn = params["pin"].toInt();
           int value = params["value"].toInt();
-          var pin = gpio.pin(pn, output);
-          pin.value = value;
+          await gpio.setState(pn, value);
         } catch (e) {}
         return {};
       }),
-      "getPinValue": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) {
+      "getPinValue": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
         try {
           int pn = params["pin"].toInt();
-          var pin = gpio.pin(pn, input);
-          var val = pin.value;
+          var val = await gpio.getState(pn);
 
           if (val == 0) {
             return PIN_VALUE_ZERO;
@@ -128,9 +118,8 @@ main(List<String> args) async {
       "startSoftTone": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
         try {
           int pn = params["pin"].toInt();
-          var pin = gpio.pin(pn, output);
-          if (!pin.isSoftToneMode) {
-            pin.startSoftTone();
+          if (!(await gpio.isSoftTone(pn))) {
+            await gpio.startSoftTone(pn);
           }
         } catch (e) {}
         return {};
@@ -138,29 +127,26 @@ main(List<String> args) async {
       "writeSoftTone": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
         try {
           int pn = params["pin"].toInt();
-          var pin = gpio.pin(pn, output);
-          if (!pin.isSoftToneMode) {
-            pin.startSoftTone();
+          if (!(await gpio.isSoftTone(pn))) {
+            await gpio.startSoftTone(pn);
           }
           num freq = params["frequency"];
           if (freq is! num) {
             return {};
           }
           freq = freq.toInt();
-          pin.writeSoftTone(freq);
+          gpio.writeSoftTone(pn, freq);
         } catch (e) {}
         return {};
       }),
       "readRCCircut": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
         try {
           int pn = params["pin"].toInt();
-          var pin = gpio.pin(pn, output);
-          pin.value = 0;
+          await gpio.setState(pn, 0);
           await new Future.delayed(const Duration(milliseconds: 100));
-          pin.mode = PinMode.input;
+          await gpio.setMode(pn, PinMode.OUTPUT);
           var reading = 0;
-          while (pin.value == 0) {
-            await null;
+          while ((await gpio.getState(pn)) == 0) {
             reading++;
           }
           return {"value": reading};
@@ -188,9 +174,8 @@ main(List<String> args) async {
       "stopSoftTone": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
         try {
           int pn = params["pin"].toInt();
-          var pin = gpio.pin(pn, output);
-          if (pin.isSoftToneMode) {
-            pin.stopSoftTone();
+          if (await gpio.isSoftTone(pn)) {
+            await gpio.stopSoftTone(pn);
           }
         } catch (e) {}
         return {};
@@ -219,15 +204,15 @@ main(List<String> args) async {
 }
 
 class PinWatcherNode extends SimpleNode {
-  Pin pin;
+  int pn;
   StreamSubscription listener;
   StreamSubscription frequencyListener;
 
   PinWatcherNode(String path) : super(path);
 
   @override
-  void onCreated() {
-    var pinn = configs[r"$gpio_pin"];
+  onCreated() async {
+    pn = configs[r"$gpio_pin"];
     var mode = configs[r"$gpio_mode"];
 
     if (mode == null) {
@@ -235,23 +220,21 @@ class PinWatcherNode extends SimpleNode {
     }
 
     if (mode == "input") {
-      pin = gpio.pin(pinn, input);
-
+      await gpio.setMode(pn, PinMode.INPUT);
       link.removeNode("${path}/value");
       link.addNode("${path}/value", {
         r"$type": "number",
-        "?value": pin.value
+        "?value": await gpio.getState(pn)
       });
 
       var pv = link["${path}/value"];
-      listener = pin.events.listen((e) {
-        pv.updateValue(e.value);
+      listener = gpio.watchState(pn).listen((e) {
+        pv.updateValue(e);
       });
 
-      pv.updateValue(pin.value);
+      pv.updateValue(await gpio.getState(pn));
     } else if (mode == "output") {
-      pin = gpio.pin(pinn, output);
-
+      await gpio.setMode(pn, PinMode.OUTPUT);
       link.removeNode("${path}/value");
       link.addNode("${path}/value", {
         r"$type": "number",
@@ -273,7 +256,7 @@ class PinWatcherNode extends SimpleNode {
       });
 
       listener =
-        link.onValueChange("${path}/value").listen((ValueUpdate update) {
+        link.onValueChange("${path}/value").listen((ValueUpdate update) async {
           var value = update.value;
 
           if (value == null) {
@@ -284,11 +267,11 @@ class PinWatcherNode extends SimpleNode {
             value = value ? 1 : 0;
           }
 
-          pin.value = value;
+          await gpio.setState(pn, value);
         });
 
       frequencyListener =
-        link.onValueChange("${path}/frequency").listen((ValueUpdate update) {
+        link.onValueChange("${path}/frequency").listen((ValueUpdate update) async {
           var value = update.value;
 
           if (value == null) {
@@ -299,11 +282,11 @@ class PinWatcherNode extends SimpleNode {
             value = value ? 261 : 0;
           }
 
-          if (!pin.isSoftToneMode) {
-            pin.startSoftTone();
+          if (!(await gpio.isSoftTone(pn))) {
+            await gpio.startSoftTone(pn);
           }
 
-          pin.writeSoftTone(value);
+          await gpio.writeSoftTone(pn, value);
         });
     }
 
@@ -317,7 +300,7 @@ class PinWatcherNode extends SimpleNode {
   }
 
   @override
-  void onRemoving() {
+  onRemoving() async {
     if (listener != null) {
       listener.cancel();
       listener = null;
@@ -328,8 +311,8 @@ class PinWatcherNode extends SimpleNode {
       frequencyListener = null;
     }
 
-    if (pin.isSoftToneMode) {
-      pin.stopSoftTone();
+    if (await gpio.isSoftTone(pn)) {
+      await gpio.stopSoftTone(pn);
     }
   }
 
