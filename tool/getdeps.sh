@@ -13,5 +13,5 @@ then
   PUB=/opt/dsa/dart-sdk/bin/pub
 fi
 
-pub get
-pub run rpi_gpio:build_lib
+${PUB} get
+${PUB} run rpi_gpio:build_lib
