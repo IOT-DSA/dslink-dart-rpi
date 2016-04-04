@@ -38,6 +38,7 @@ class SysfsGPIO extends GPIO {
     if (!(await file.exists())) {
       await new File("/sys/class/gpio/export").writeAsString(pin.toString());
     }
+    await setMode(pin, PinMode.OUTPUT);
     await file.writeAsString(value.toString());
   }
 
