@@ -6,7 +6,7 @@ then
   export HOME="/home/pi"
 fi
 
-PUB=$(which pub)
+PUB=$(which pub || true)
 
 if [ -z "${PUB}" ]
 then
