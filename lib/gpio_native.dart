@@ -30,9 +30,9 @@ class NativeGPIO implements GPIO {
   @override
   Future setMode(int pin, PinMode mode) async {
     if (mode == PinMode.INPUT) {
-      gpio.pin(pin).mode = Native.PinMode.input;
+      gpio.pin(pin, Native.PinMode.input).mode = Native.PinMode.input;
     } else if (mode == PinMode.OUTPUT) {
-      gpio.pin(pin).mode = Native.PinMode.output;
+      gpio.pin(pin, Native.PinMode.output).mode = Native.PinMode.output;
     }
   }
 
