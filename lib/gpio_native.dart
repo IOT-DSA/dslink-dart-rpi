@@ -13,8 +13,8 @@ class NativeGPIO implements GPIO {
   @override
   Future init() async {
     await rpi.loadLibrary();
-    gpio = Native.Gpio.instance;
     Native.Gpio.hardware = new rpi.RpiHardware();
+    gpio = Native.Gpio.instance;
   }
 
   @override
