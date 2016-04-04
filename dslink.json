@@ -19,6 +19,10 @@
     },
     "token": {
       "type": "string"
+    },
+    "gpio_driver": {
+      "type": "enum[native,sysfs]",
+      "default": "native"
     }
   },
   "sudo": true

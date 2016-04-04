@@ -3,8 +3,12 @@ import "dart:async";
 import "package:dslink/dslink.dart";
 import "package:dslink/nodes.dart";
 
+import "package:args/args.dart";
+
 import "package:dslink_rpi/gpio.dart";
+
 import "package:dslink_rpi/gpio_native.dart";
+import "package:dslink_rpi/gpio_sysfs.dart";
 
 LinkProvider link;
 GPIO gpio;
@@ -80,9 +84,6 @@ final Map<String, dynamic> DEFAULT_NODES = {
 };
 
 main(List<String> args) async {
-  gpio = new NativeGPIO();
-  await gpio.init();
-
   link = new LinkProvider(args,
     "RaspberryPi-",
     defaultNodes: DEFAULT_NODES,
@@ -181,6 +182,27 @@ main(List<String> args) async {
         return {};
       })
     }, autoInitialize: false);
+
+  var argp = new ArgParser();
+  argp.addOption("gpio_driver", allowed: [
+    "native",
+    "sysfs"
+  ], defaultsTo: "native");
+
+  link.configure(argp: argp, optionsHandler: (ArgResults results) {
+    String driver = results["gpio_driver"];
+    if (driver == "sysfs") {
+      gpio = new SysfsGPIO();
+    } else {
+      gpio = new NativeGPIO();
+    }
+  });
+
+  if (gpio == null) {
+    gpio = new NativeGPIO();
+  }
+
+  await gpio.init();
 
   link.init();
 
