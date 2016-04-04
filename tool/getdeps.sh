@@ -13,5 +13,7 @@ then
   PUB=/opt/dsa/dart-sdk/bin/pub
 fi
 
+echo "FETCH DEPENDENCIES"
 ${PUB} get
+echo "BUILD LIBRARIES"
 ${PUB} run rpi_gpio:build_lib
