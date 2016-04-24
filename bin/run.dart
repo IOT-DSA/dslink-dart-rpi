@@ -80,6 +80,23 @@ final Map<String, dynamic> DEFAULT_NODES = {
       ],
       r"$result": "values"
     },
+    "setPinMode": {
+      r"$is": "setPinMode",
+      r"$invokable": "write",
+      r"$name": "Set Pin Mode",
+      r"$params": [
+        {
+          "name": "pin",
+          "type": "number",
+          "default": 1
+        },
+        {
+          "name": "mode",
+          "type": "enum[in,out]",
+          "default": "in"
+        }
+      ]
+    }
   }
 };
 
@@ -113,6 +130,22 @@ main(List<String> args) async {
           } else {
             return {"value": val};
           }
+        } catch (e) {}
+        return {};
+      }),
+      "setPinMode": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
+        try {
+          int pn = params["pin"].toInt();
+          var mode = params["mode"].toString().toLowerCase();
+          PinMode m = PinMode.OUTPUT;
+
+          if (mode == "in" || mode == "input") {
+            m = PinMode.INPUT;
+          } else if (mode == "out" || mode == "output") {
+            m = PinMode.OUTPUT;
+          }
+
+          await gpio.setMode(pn, m);
         } catch (e) {}
         return {};
       }),
@@ -169,9 +202,11 @@ main(List<String> args) async {
         link.save();
       }),
       "pinWatcher": (String path) => new PinWatcherNode(path),
-      "deletePinWatcher": (String path) => new DeleteActionNode.forParent(path, link.provider as MutableNodeProvider, onDelete: () {
-        link.save();
-      }),
+      "deletePinWatcher": (String path) => new DeleteActionNode.forParent(
+        path,
+        link.provider as MutableNodeProvider,
+        onDelete: () => link.save()
+      ),
       "stopSoftTone": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
         try {
           int pn = params["pin"].toInt();
