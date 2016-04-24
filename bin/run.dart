@@ -13,8 +13,8 @@ import "package:dslink_rpi/gpio_sysfs.dart";
 LinkProvider link;
 GPIO gpio;
 
-const PIN_VALUE_ZERO = const {"value": 0};
-const PIN_VALUE_ONE = const {"value": 1};
+const PIN_VALUE_ZERO = const [0];
+const PIN_VALUE_ONE = const [1];
 
 final Map<String, dynamic> DEFAULT_NODES = {
   "gpio": {
