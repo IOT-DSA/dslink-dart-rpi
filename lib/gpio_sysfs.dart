@@ -63,4 +63,20 @@ class SysfsGPIO extends GPIO {
   Future<bool> isSoftTone(int pin) async {
     return false;
   }
+
+  @override
+  Future<String> describe(int pin) async {
+    return "Sysfs Pin ${pin}";
+  }
+
+  @override
+  Future<PinMode> getMode(int pin) async {
+    var file = new File("/sys/class/gpio/gpio${pin}/direction");
+    if (!(await file.exists())) {
+      await new File("/sys/class/gpio/export").writeAsString(pin.toString());
+    }
+    var content = await file.readAsString();
+    content = content.trim();
+    return content.startsWith("in") ? PinMode.INPUT : PinMode.OUTPUT;
+  }
 }

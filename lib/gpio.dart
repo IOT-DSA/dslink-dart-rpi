@@ -5,7 +5,9 @@ import "dart:async";
 abstract class GPIO {
   Future init();
 
+  Future<PinMode> getMode(int pin);
   Future setMode(int pin, PinMode mode);
+
   Future setState(int pin, int value);
 
   Future<int> getState(int pin);
@@ -16,6 +18,8 @@ abstract class GPIO {
   Future stopSoftTone(int pin);
   Future writeSoftTone(int pin, int frequency);
   Future<bool> isSoftTone(int pin);
+
+  Future<String> describe(int pin);
 }
 
 class PinMode {

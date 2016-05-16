@@ -9,22 +9,23 @@ import "gpio.dart";
 
 class NativeGPIO implements GPIO {
   Native.Gpio gpio;
+  Native.GpioHardware hardware;
 
   @override
   Future init() async {
     await rpi.loadLibrary();
-    Native.Gpio.hardware = new rpi.RpiHardware();
+    hardware = Native.Gpio.hardware = new rpi.RpiHardware();
     gpio = Native.Gpio.instance;
   }
 
   @override
   Future<int> getState(int pin) async {
-    return gpio.pin(pin).value;
+    return hardware.digitalRead(pin);
   }
 
   @override
   Future setState(int pin, int value) async {
-    gpio.pin(pin).value = value;
+    gpio.pin(pin, Native.PinMode.output).value = value;
   }
 
   @override
@@ -61,5 +62,21 @@ class NativeGPIO implements GPIO {
   @override
   Future<bool> isSoftTone(int pin) async {
     return gpio.pin(pin).isSoftToneMode;
+  }
+
+  @override
+  Future<String> describe(int pin) async {
+    return gpio.pin(pin).description;
+  }
+
+  @override
+  Future<PinMode> getMode(int pin) async {
+    var p = gpio.pin(pin);
+    try {
+      int value = p.value;
+      return PinMode.INPUT;
+    } catch (e) {
+      return PinMode.OUTPUT;
+    }
   }
 }
