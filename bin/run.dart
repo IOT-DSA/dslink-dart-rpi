@@ -13,8 +13,8 @@ import "package:dslink_rpi/gpio_sysfs.dart";
 LinkProvider link;
 GPIO gpio;
 
-const PIN_VALUE_ZERO = const [0];
-const PIN_VALUE_ONE = const [1];
+const PIN_VALUE_ZERO = const [const [0]];
+const PIN_VALUE_ONE = const [const [1]];
 
 final Map<String, dynamic> DEFAULT_NODES = {
   "gpio": {
@@ -114,7 +114,7 @@ final Map<String, dynamic> DEFAULT_NODES = {
       r"$params": [{"name": "pin", "type": "number", "default": 1}],
       r"$columns": [{"name": "value", "type": "number"}],
       r"$result": "values"
-    },
+    }
   }
 };
 
@@ -123,6 +123,8 @@ int readInt(input) {
     return num.parse(input).toInt();
   } else if (input is num) {
     return input.toInt();
+  } else if (input == null) {
+    return 0;
   }
   throw new Exception("Invalid Number");
 }
@@ -243,7 +245,9 @@ main(List<String> args) async {
         await gpio.writeAnalogPin(pn, value);
 
         return [];
-      })
+      }),
+      "gpioValue": (String path) => new ValueNode(path),
+      "gpioFrequency": (String path) => new FrequencyNode(path)
     }, autoInitialize: false);
 
   var argp = new ArgParser();
@@ -291,7 +295,6 @@ main(List<String> args) async {
 class PinWatcherNode extends SimpleNode {
   int pn;
   StreamSubscription listener;
-  StreamSubscription frequencyListener;
 
   PinWatcherNode(String path) : super(path);
 
@@ -321,7 +324,8 @@ class PinWatcherNode extends SimpleNode {
     } else if (mode == "output") {
       await gpio.setMode(pn, PinMode.OUTPUT);
       link.removeNode("${path}/value");
-      link.addNode("${path}/value", {
+      ValueNode valNode = link.addNode("${path}/value", {
+        r"$is": "gpioValue",
         r"$type": "number",
         "?value": 0,
         r"$writable": "write",
@@ -334,45 +338,14 @@ class PinWatcherNode extends SimpleNode {
         }
       });
 
-      link.addNode("${path}/frequency", {
+      FrequencyNode freqNode = link.addNode("${path}/frequency", {
+        r"$is": "gpioFrequency",
         r"$type": "number",
         "?value": 0,
         r"$writable": "write"
       });
 
-      listener =
-        link.onValueChange("${path}/value").listen((ValueUpdate update) async {
-          var value = update.value;
-
-          if (value == null) {
-            value = 0;
-          }
-
-          if (value is bool) {
-            value = value ? 1 : 0;
-          }
-
-          await gpio.setState(pn, value);
-        });
-
-      frequencyListener =
-        link.onValueChange("${path}/frequency").listen((ValueUpdate update) async {
-          var value = update.value;
-
-          if (value == null) {
-            value = 0;
-          }
-
-          if (value is bool) {
-            value = value ? 261 : 0;
-          }
-
-          if (!(await gpio.isSoftTone(pn))) {
-            await gpio.startSoftTone(pn);
-          }
-
-          await gpio.writeSoftTone(pn, value);
-        });
+      valNode.pin = freqNode.pin = pn;
     }
 
     link.removeNode("${path}/delete");
@@ -391,11 +364,6 @@ class PinWatcherNode extends SimpleNode {
       listener = null;
     }
 
-    if (frequencyListener != null) {
-      frequencyListener.cancel();
-      frequencyListener = null;
-    }
-
     if (await gpio.isSoftTone(pn)) {
       await gpio.stopSoftTone(pn);
     }
@@ -408,5 +376,47 @@ class PinWatcherNode extends SimpleNode {
     m.remove("value");
     m.remove("frequency");
     return m;
+  }
+}
+
+class ValueNode extends SimpleNode {
+  int pin;
+
+  ValueNode(String path) : super(path);
+
+  @override
+  onSetValue(value) {
+    try {
+      var i = readInt(value);
+      gpio.setState(pin, i);
+    } catch (e) {
+    }
+    return true;
+  }
+}
+
+class FrequencyNode extends SimpleNode {
+  int pin;
+
+  FrequencyNode(String path) : super(path);
+
+  @override
+  onSetValue(value) {
+    if (value is bool) {
+      value = value ? 261 : 0;
+    }
+
+    try {
+      var i = readInt(value);
+
+      new Future(() async {
+        if (!(await gpio.isSoftTone(pin))) {
+          await gpio.startSoftTone(pin);
+        }
+        await gpio.writeSoftTone(pin, i);
+      });
+    } catch (e) {
+    }
+    return true;
   }
 }
