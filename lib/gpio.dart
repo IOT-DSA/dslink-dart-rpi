@@ -31,6 +31,7 @@ abstract class GPIO {
   Future writeDigitalByte2(int value);
 
   Future setPullUpDown(int pin, PullUpDown state);
+  Future setPwmValue(int pin, int value);
 }
 
 class PinMode {

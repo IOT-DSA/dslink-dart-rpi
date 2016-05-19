@@ -110,4 +110,8 @@ class SysfsGPIO extends GPIO {
   @override
   Future setPullUpDown(int pin, PullUpDown state) async {
   }
+
+  @override
+  Future setPwmValue(int pin, int value) async {
+  }
 }

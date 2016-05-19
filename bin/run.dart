@@ -131,6 +131,16 @@ final Map<String, dynamic> DEFAULT_NODES = {
           "default": "off"
         }
       ]
+    },
+    "setPwmValue": {
+      r"$is": "setPwmValue",
+      r"$invokable": "write",
+      r"$name": "Write PWM Value",
+      r"$params": [
+        {"name": "pin", "type": "number", "default": 1},
+        {"name": "value", "type": "number", "default": 1023}
+      ],
+      r"$result": "values"
     }
   }
 };
@@ -265,6 +275,7 @@ main(List<String> args) async {
       }),
       "gpioValue": (String path) => new ValueNode(path),
       "gpioFrequency": (String path) => new FrequencyNode(path),
+      "gpioPwm": (String path) => new ModulationNode(path),
       "setPullUpDownMode": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
         int pn = readInt(params["pin"]);
         var mode = params["mode"].toString().toLowerCase();
@@ -282,6 +293,13 @@ main(List<String> args) async {
 
         return [];
       }),
+      "setPwmValue": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
+        int pn = readInt(params["pin"]);
+        int value = readInt(params["value"]);
+        await gpio.setPwmValue(pn, value);
+
+        return [];
+      })
     }, autoInitialize: false);
 
   var argp = new ArgParser();
@@ -381,7 +399,15 @@ class PinWatcherNode extends SimpleNode {
         r"$writable": "write"
       });
 
-      valNode.pin = freqNode.pin = pn;
+      ModulationNode modNode = link.addNode("${path}/modulation", {
+        r"$name": "Modulation",
+        r"$is": "gpioModulation",
+        r"$type": "number",
+        "?value": 0,
+        r"$writable": "write"
+      });
+
+      valNode.pin = freqNode.pin = modNode.pin = pn;
     }
 
     link.removeNode("${path}/delete");
@@ -412,6 +438,7 @@ class PinWatcherNode extends SimpleNode {
     m.remove("delete");
     m.remove("value");
     m.remove("frequency");
+    m.remove("modulation");
     return m;
   }
 }
@@ -455,6 +482,31 @@ class FrequencyNode extends SimpleNode {
           await gpio.startSoftTone(pin);
         }
         await gpio.writeSoftTone(pin, i);
+
+        updateValue(i);
+      });
+    } catch (e) {
+    }
+    return true;
+  }
+}
+
+class ModulationNode extends SimpleNode {
+  int pin;
+
+  ModulationNode(String path) : super(path);
+
+  @override
+  onSetValue(value) {
+    if (value is bool) {
+      value = value ? 1023 : 0;
+    }
+
+    try {
+      var i = readInt(value);
+
+      new Future(() async {
+        await gpio.setPwmValue(pin, i);
 
         updateValue(i);
       });

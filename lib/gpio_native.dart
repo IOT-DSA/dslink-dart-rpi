@@ -114,4 +114,9 @@ class NativeGPIO implements GPIO {
   Future setPullUpDown(int pin, PullUpDown state) async {
     hardware.pullUpDnControl(pin, state.id);
   }
+
+  @override
+  Future setPwmValue(int pin, int value) async {
+    hardware.pwmWrite(pin, value);
+  }
 }
