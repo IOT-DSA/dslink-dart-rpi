@@ -25,7 +25,7 @@ class NativeGPIO implements GPIO {
 
   @override
   Future setState(int pin, int value) async {
-    gpio.pin(pin, Native.PinMode.output).value = value;
+    hardware.digitalWrite(pin, value);
   }
 
   @override
