@@ -401,7 +401,7 @@ class PinWatcherNode extends SimpleNode {
 
       ModulationNode modNode = link.addNode("${path}/modulation", {
         r"$name": "Modulation",
-        r"$is": "gpioModulation",
+        r"$is": "gpioPwm",
         r"$type": "number",
         "?value": 0,
         r"$writable": "write"
