@@ -388,7 +388,11 @@ class ValueNode extends SimpleNode {
   onSetValue(value) {
     try {
       var i = readInt(value);
-      gpio.setState(pin, i);
+
+      new Future(() async {
+        await gpio.setState(pin, i);
+        updateValue(i);
+      });
     } catch (e) {
     }
     return true;
@@ -414,6 +418,8 @@ class FrequencyNode extends SimpleNode {
           await gpio.startSoftTone(pin);
         }
         await gpio.writeSoftTone(pin, i);
+
+        updateValue(i);
       });
     } catch (e) {
     }
