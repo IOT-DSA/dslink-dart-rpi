@@ -79,4 +79,31 @@ class SysfsGPIO extends GPIO {
     content = content.trim();
     return content.startsWith("in") ? PinMode.INPUT : PinMode.OUTPUT;
   }
+
+  @override
+  Future<int> readAnalogPin(int pin) async {
+    return null;
+  }
+
+  @override
+  Future<int> readDigitalByte() async {
+    return null;
+  }
+
+  @override
+  Future<int> readDigitalByte2() async {
+    return null;
+  }
+
+  @override
+  Future writeAnalogPin(int pin, int value) async {
+  }
+
+  @override
+  Future writeDigitalByte(int value) async {
+  }
+
+  @override
+  Future writeDigitalByte2(int value) async {
+  }
 }

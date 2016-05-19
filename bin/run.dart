@@ -96,9 +96,36 @@ final Map<String, dynamic> DEFAULT_NODES = {
           "default": "in"
         }
       ]
-    }
+    },
+    "analogWrite": {
+      r"$is": "analogWrite",
+      r"$invokable": "write",
+      r"$name": "Write Analog",
+      r"$params": [
+        {"name": "pin", "type": "number", "default": 1},
+        {"name": "value", "type": "number", "default": 0}
+      ],
+      r"$result": "values"
+    },
+    "analogRead": {
+      r"$is": "analogRead",
+      r"$invokable": "write",
+      r"$name": "Read Analog",
+      r"$params": [{"name": "pin", "type": "number", "default": 1}],
+      r"$columns": [{"name": "value", "type": "number"}],
+      r"$result": "values"
+    },
   }
 };
+
+int readInt(input) {
+  if (input is String) {
+    return num.parse(input).toInt();
+  } else if (input is num) {
+    return input.toInt();
+  }
+  throw new Exception("Invalid Number");
+}
 
 main(List<String> args) async {
   link = new LinkProvider(args,
@@ -111,81 +138,72 @@ main(List<String> args) async {
         x.updateValue(l == 0 ? 1 : 0);
       }),
       "setPinValue": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
-        try {
-          int pn = params["pin"].toInt();
-          int value = params["value"].toInt();
-          await gpio.setState(pn, value);
-        } catch (e) {}
-        return {};
+        int pn = readInt(params["pin"]);
+        int value = readInt(params["value"]);
+        await gpio.setState(pn, value);
+
+        return [];
       }),
       "getPinValue": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
-        try {
-          int pn = params["pin"].toInt();
-          var val = await gpio.getState(pn);
+        int pn = readInt(params["pin"]);
+        var val = await gpio.getState(pn);
 
-          if (val == 0) {
-            return PIN_VALUE_ZERO;
-          } else if (val == 1) {
-            return PIN_VALUE_ONE;
-          } else {
-            return {"value": val};
-          }
-        } catch (e) {}
-        return {};
+        if (val == 0) {
+          return PIN_VALUE_ZERO;
+        } else if (val == 1) {
+          return PIN_VALUE_ONE;
+        } else {
+          return [[val]];
+        }
       }),
       "setPinMode": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
-        try {
-          int pn = params["pin"].toInt();
-          var mode = params["mode"].toString().toLowerCase();
-          PinMode m = PinMode.OUTPUT;
+        int pn = readInt(params["pin"]);
+        var mode = params["mode"].toString().toLowerCase();
+        PinMode m = PinMode.OUTPUT;
 
-          if (mode == "in" || mode == "input") {
-            m = PinMode.INPUT;
-          } else if (mode == "out" || mode == "output") {
-            m = PinMode.OUTPUT;
-          }
+        if (mode == "in" || mode == "input") {
+          m = PinMode.INPUT;
+        } else if (mode == "out" || mode == "output") {
+          m = PinMode.OUTPUT;
+        }
 
-          await gpio.setMode(pn, m);
-        } catch (e) {}
-        return {};
+        await gpio.setMode(pn, m);
+
+        return [];
       }),
       "startSoftTone": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
-        try {
-          int pn = params["pin"].toInt();
-          if (!(await gpio.isSoftTone(pn))) {
-            await gpio.startSoftTone(pn);
-          }
-        } catch (e) {}
-        return {};
+        int pn = readInt(params["pin"]);
+        if (!(await gpio.isSoftTone(pn))) {
+          await gpio.startSoftTone(pn);
+        }
+
+        return [];
       }),
       "writeSoftTone": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
-        try {
-          int pn = params["pin"].toInt();
-          if (!(await gpio.isSoftTone(pn))) {
-            await gpio.startSoftTone(pn);
-          }
-          num freq = params["frequency"];
-          if (freq is! num) {
-            return {};
-          }
-          freq = freq.toInt();
-          gpio.writeSoftTone(pn, freq);
-        } catch (e) {}
-        return {};
+        int pn = readInt(params["pin"]);
+
+        if (!(await gpio.isSoftTone(pn))) {
+          await gpio.startSoftTone(pn);
+        }
+        num freq = params["frequency"];
+        if (freq is! num) {
+          return [];
+        }
+        await gpio.writeSoftTone(pn, freq.toInt());
+
+        return [];
       }),
       "readRCCircut": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
-        try {
-          int pn = params["pin"].toInt();
-          await gpio.setState(pn, 0);
-          await new Future.delayed(const Duration(milliseconds: 100));
-          await gpio.setMode(pn, PinMode.OUTPUT);
-          var reading = 0;
-          while ((await gpio.getState(pn)) == 0) {
-            reading++;
-          }
-          return {"value": reading};
-        } catch (e) {}
-        return {};
+        int pn = readInt(params["pin"]);
+
+        await gpio.setState(pn, 0);
+        await new Future.delayed(const Duration(milliseconds: 100));
+        await gpio.setMode(pn, PinMode.OUTPUT);
+        var reading = 0;
+        while ((await gpio.getState(pn)) == 0) {
+          reading++;
+        }
+        return [[reading]];
       }),
       "createPinWatcher": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) {
         var m = {
@@ -208,13 +226,23 @@ main(List<String> args) async {
         onDelete: () => link.save()
       ),
       "stopSoftTone": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
-        try {
-          int pn = params["pin"].toInt();
-          if (await gpio.isSoftTone(pn)) {
-            await gpio.stopSoftTone(pn);
-          }
-        } catch (e) {}
-        return {};
+        int pn = readInt(params["pin"]);
+        if (await gpio.isSoftTone(pn)) {
+          await gpio.stopSoftTone(pn);
+        }
+        return [];
+      }),
+      "analogRead": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
+        int pn = readInt(params["pin"]);
+        return [[await gpio.readAnalogPin(pn)]];
+      }),
+      "analogWrite": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
+        int pn = readInt(params["pin"]);
+        int value = readInt(params["value"]);
+
+        await gpio.writeAnalogPin(pn, value);
+
+        return [];
       })
     }, autoInitialize: false);
 

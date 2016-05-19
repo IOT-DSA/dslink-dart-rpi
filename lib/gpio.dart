@@ -20,6 +20,15 @@ abstract class GPIO {
   Future<bool> isSoftTone(int pin);
 
   Future<String> describe(int pin);
+
+  Future<int> readAnalogPin(int pin);
+  Future writeAnalogPin(int pin, int value);
+
+  Future<int> readDigitalByte();
+  Future<int> readDigitalByte2();
+
+  Future writeDigitalByte(int value);
+  Future writeDigitalByte2(int value);
 }
 
 class PinMode {
