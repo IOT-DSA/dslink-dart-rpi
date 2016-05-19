@@ -1,6 +1,6 @@
 {
   "name": "dslink-dart-rpi",
-  "version": "0.0.1",
+  "version": "0.2.1",
   "description": "Raspberry Pi DSLink",
   "main": "bin/run.dart",
   "engines": {
