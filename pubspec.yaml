@@ -7,4 +7,4 @@ dependencies:
   rpi_gpio:
     git:
       url: https://github.com/kaendfinger/dart_rpi_gpio.git
-      ref: caac0d1f70552e91d33614c6f84168bfe73c8a4d
+      ref: fd7155fd69f2efb42e65db66f315642ffd3e95c6
