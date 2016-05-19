@@ -37,6 +37,7 @@ abstract class GPIO {
 class PinMode {
   static const PinMode INPUT = const PinMode._("INPUT");
   static const PinMode OUTPUT = const PinMode._("OUTPUT");
+  static const PinMode PULSED = const PinMode._("PULSED");
 
   final String name;
 

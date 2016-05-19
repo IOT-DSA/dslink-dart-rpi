@@ -117,6 +117,7 @@ class NativeGPIO implements GPIO {
 
   @override
   Future setPwmValue(int pin, int value) async {
+    hardware.pinMode(pin, 2);
     hardware.pwmWrite(pin, value);
   }
 }

@@ -92,7 +92,7 @@ final Map<String, dynamic> DEFAULT_NODES = {
         },
         {
           "name": "mode",
-          "type": "enum[in,out]",
+          "type": "enum[in,out,pwm]",
           "default": "in"
         }
       ]
@@ -194,6 +194,8 @@ main(List<String> args) async {
           m = PinMode.INPUT;
         } else if (mode == "out" || mode == "output") {
           m = PinMode.OUTPUT;
+        } else if (mode == "pulse" || mode == "pwm" || mode == "pulsed") {
+          m = PinMode.PULSED;
         }
 
         await gpio.setMode(pn, m);
