@@ -106,4 +106,8 @@ class SysfsGPIO extends GPIO {
   @override
   Future writeDigitalByte2(int value) async {
   }
+
+  @override
+  Future setPullUpDown(int pin, PullUpDown state) async {
+  }
 }

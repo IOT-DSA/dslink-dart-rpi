@@ -82,31 +82,36 @@ class NativeGPIO implements GPIO {
 
   @override
   Future<int> readAnalogPin(int pin) async {
-    return Native.Gpio.hardware.analogRead(pin);
+    return hardware.analogRead(pin);
   }
 
   @override
   Future<int> readDigitalByte() async {
-    return Native.Gpio.hardware.digitalReadByte();
+    return hardware.digitalReadByte();
   }
 
   @override
   Future<int> readDigitalByte2() async {
-    return Native.Gpio.hardware.digitalReadByte2();
+    return hardware.digitalReadByte2();
   }
 
   @override
   Future writeAnalogPin(int pin, int value) async {
-    Native.Gpio.hardware.analogWrite(pin, value);
+    hardware.analogWrite(pin, value);
   }
 
   @override
   Future writeDigitalByte(int value) async {
-    Native.Gpio.hardware.digitalWriteByte(value);
+    hardware.digitalWriteByte(value);
   }
 
   @override
   Future writeDigitalByte2(int value) async {
-    Native.Gpio.hardware.digitalWriteByte2(value);
+    hardware.digitalWriteByte2(value);
+  }
+
+  @override
+  Future setPullUpDown(int pin, PullUpDown state) async {
+    hardware.pullUpDnControl(pin, state.id);
   }
 }

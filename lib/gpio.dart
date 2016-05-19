@@ -29,6 +29,8 @@ abstract class GPIO {
 
   Future writeDigitalByte(int value);
   Future writeDigitalByte2(int value);
+
+  Future setPullUpDown(int pin, PullUpDown state);
 }
 
 class PinMode {
@@ -38,4 +40,15 @@ class PinMode {
   final String name;
 
   const PinMode._(this.name);
+}
+
+class PullUpDown {
+  static const PullUpDown OFF = const PullUpDown._("OFF", 0);
+  static const PullUpDown DOWN = const PullUpDown._("DOWN", 1);
+  static const PullUpDown UP = const PullUpDown._("UP", 2);
+
+  final String name;
+  final int id;
+
+  const PullUpDown._(this.name, this.id);
 }

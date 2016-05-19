@@ -114,6 +114,23 @@ final Map<String, dynamic> DEFAULT_NODES = {
       r"$params": [{"name": "pin", "type": "number", "default": 1}],
       r"$columns": [{"name": "value", "type": "number"}],
       r"$result": "values"
+    },
+    "setPullUpDownMode": {
+      r"$is": "setPullUpDownMode",
+      r"$invokable": "write",
+      r"$name": "Set Pull Up/Down Resist Mode",
+      r"$params": [
+        {
+          "name": "pin",
+          "type": "number",
+          "default": 1
+        },
+        {
+          "name": "mode",
+          "type": "enum[off,up,down]",
+          "default": "off"
+        }
+      ]
     }
   }
 };
@@ -247,7 +264,24 @@ main(List<String> args) async {
         return [];
       }),
       "gpioValue": (String path) => new ValueNode(path),
-      "gpioFrequency": (String path) => new FrequencyNode(path)
+      "gpioFrequency": (String path) => new FrequencyNode(path),
+      "setPullUpDownMode": (String path) => new SimpleActionNode(path, (Map<String, dynamic> params) async {
+        int pn = readInt(params["pin"]);
+        var mode = params["mode"].toString().toLowerCase();
+        PullUpDown m = PullUpDown.OFF;
+
+        if (mode == "up" || mode == "high") {
+          m = PullUpDown.UP;
+        } else if (mode == "down" || mode == "low") {
+          m = PullUpDown.DOWN;
+        } else {
+          m = PullUpDown.OFF;
+        }
+
+        await gpio.setPullUpDown(pn, m);
+
+        return [];
+      }),
     }, autoInitialize: false);
 
   var argp = new ArgParser();
@@ -325,6 +359,7 @@ class PinWatcherNode extends SimpleNode {
       await gpio.setMode(pn, PinMode.OUTPUT);
       link.removeNode("${path}/value");
       ValueNode valNode = link.addNode("${path}/value", {
+        r"$name": "Value",
         r"$is": "gpioValue",
         r"$type": "number",
         "?value": 0,
@@ -339,6 +374,7 @@ class PinWatcherNode extends SimpleNode {
       });
 
       FrequencyNode freqNode = link.addNode("${path}/frequency", {
+        r"$name": "Frequency",
         r"$is": "gpioFrequency",
         r"$type": "number",
         "?value": 0,
@@ -350,6 +386,7 @@ class PinWatcherNode extends SimpleNode {
 
     link.removeNode("${path}/delete");
     link.addNode("${path}/delete", {
+      r"$name": "Delete",
       r"$is": "deletePinWatcher",
       r"$invokable": "write",
       r"$result": "values",
